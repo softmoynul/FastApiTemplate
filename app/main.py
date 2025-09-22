@@ -5,7 +5,7 @@ from .routes import create_sub_app
 
 import importlib
 app = FastAPI()
-apps = ["user", "item"]
+apps = ["user", "item", "auth"]
 
 
 register_tortoise(
@@ -18,5 +18,5 @@ register_tortoise(
 
 for app_name in apps:
     routes_module = importlib.import_module(f"applications.{app_name}.routes")
-    sub_app = create_sub_app(app_name, routes_module.routes)
+    sub_app = create_sub_app(app_name, routes_module.router)
     app.mount(f"/{app_name}", sub_app)
