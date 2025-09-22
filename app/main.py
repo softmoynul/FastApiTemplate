@@ -16,6 +16,7 @@ register_tortoise(
     add_exception_handlers=True,
 )
 
+
 for app_name in apps:
     routes_module = importlib.import_module(f"applications.{app_name}.routes")
     sub_app = create_sub_app(app_name, routes_module.router)

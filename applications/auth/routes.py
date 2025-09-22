@@ -91,50 +91,41 @@ async def reset_password(token: str = Body(...), new_password: str = Body(...)):
 
 
 # @router.post("/verify-token")
-# async def verify_token(token: str = Form(...)):
+# async def verify_token(token: str = Form(...), refresh_token: str = Form(None)):
 #     try:
 #         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 #         return {"valid": True, "payload": payload}
+
+#     except ExpiredSignatureError:
+#         if not refresh_token:
+#             return {"valid": False, "message": "Access token expired. Refresh token required."}
+
+#         try:
+#             refresh_payload = jwt.decode(refresh_token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
+
+#             token_data = {
+#                 "sub": refresh_payload.get("sub"),
+#                 "username": refresh_payload.get("username"),
+#                 "is_active": refresh_payload.get("is_active"),
+#                 "is_staff": refresh_payload.get("is_staff"),
+#                 "is_superuser": refresh_payload.get("is_superuser")
+#             }
+
+#             new_access_token = create_access_token(token_data)
+#             new_refresh_token = create_refresh_token(token_data)
+
+#             return {
+#                 "valid": True,
+#                 "message": "Access token refreshed",
+#                 "access_token": new_access_token,
+#                 "refresh_token": new_refresh_token,
+#                 "payload": jwt.decode(new_access_token, SECRET_KEY, algorithms=[ALGORITHM])
+#             }
+
+#         except ExpiredSignatureError:
+#             return {"valid": False, "message": "Refresh token expired. Please log in again."}
+#         except JWTError:
+#             return {"valid": False, "message": "Invalid refresh token"}
+
 #     except JWTError:
-#         return {"valid": False, "message": "Invalid or expired token"}
-
-
-@router.post("/verify-token")
-async def verify_token(token: str = Form(...), refresh_token: str = Form(None)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return {"valid": True, "payload": payload}
-
-    except ExpiredSignatureError:
-        if not refresh_token:
-            return {"valid": False, "message": "Access token expired. Refresh token required."}
-
-        try:
-            refresh_payload = jwt.decode(refresh_token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
-
-            token_data = {
-                "sub": refresh_payload.get("sub"),
-                "username": refresh_payload.get("username"),
-                "is_active": refresh_payload.get("is_active"),
-                "is_staff": refresh_payload.get("is_staff"),
-                "is_superuser": refresh_payload.get("is_superuser")
-            }
-
-            new_access_token = create_access_token(token_data)
-            new_refresh_token = create_refresh_token(token_data)
-
-            return {
-                "valid": True,
-                "message": "Access token refreshed",
-                "access_token": new_access_token,
-                "refresh_token": new_refresh_token,
-                "payload": jwt.decode(new_access_token, SECRET_KEY, algorithms=[ALGORITHM])
-            }
-
-        except ExpiredSignatureError:
-            return {"valid": False, "message": "Refresh token expired. Please log in again."}
-        except JWTError:
-            return {"valid": False, "message": "Invalid refresh token"}
-
-    except JWTError:
-        return {"valid": False, "message": "Invalid access token"}
+#         return {"valid": False, "message": "Invalid access token"}
