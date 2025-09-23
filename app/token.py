@@ -49,11 +49,6 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     refresh_token: str = Form(None)  # you can also use Cookie(None)
 ) -> User:
-    """
-    Try access token first.
-    If expired -> refresh with refresh_token.
-    Always fetch User from DB for security.
-    """
     try:
         # Try normal access token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
