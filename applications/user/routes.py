@@ -1,13 +1,15 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Form, Query
-from app.token import superuser_required, login_required
-from applications.user.models import User
+from app.token import superuser_required, login_required, permission_required
+from applications.user.models import User, Permission, Group
+from .permission import permission
 from passlib.context import CryptContext
-router = APIRouter(
-    tags=["Users"],
-)
+router = APIRouter()
+
+router.include_router(permission, tags=["Permission"])
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 @router.post("/users", status_code=status.HTTP_201_CREATED)
 async def create_user(
@@ -37,6 +39,9 @@ async def create_user(
         "message": f"{current_user['username']} created this user",
         "new_user": new_user
     }
+
+
+
 
 @router.get("/users", status_code=status.HTTP_200_OK, dependencies=[Depends(login_required)])
 async def get_all_users():
@@ -102,5 +107,11 @@ async def delete_user(user_id: int):
     return {"detail": "User deleted successfully"}
 
 
+
+@router.get("/allusers")
+async def list_users(
+    current_user: User = Depends(permission_required("view_users"))
+):
+    return await User.all().values("id", "username", "email")
 
 

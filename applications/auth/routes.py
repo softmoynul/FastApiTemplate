@@ -54,7 +54,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 @router.post("/forgot-password")
-async def forgot_password(email: str = Body(...)):
+async def forgot_password(email: str = Form(...)):
     user = await User.get_or_none(email=email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -71,7 +71,7 @@ async def forgot_password(email: str = Body(...)):
 
 
 @router.post("/reset-password")
-async def reset_password(token: str = Body(...), new_password: str = Body(...)):
+async def reset_password(token: str = Form(...), new_password: str = Form(...)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload.get("type") != "password_reset":
