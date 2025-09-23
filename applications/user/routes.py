@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Form, Query
 from app.token import superuser_required, login_required
 from applications.user.models import User
 from passlib.context import CryptContext
@@ -11,12 +11,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/users", status_code=status.HTTP_201_CREATED)
 async def create_user(
-    username: str,
-    email: str,
-    password: str,
-    is_active: bool = True,
-    is_staff: bool = False,
-    is_superuser: bool = False,
+    username: str = Form(..., description="Username"),
+    email: str = Form(..., description="Email"),
+    password: str = Form(..., min_length=8, description="User password", password=True, example="********"),
+    is_active: bool = Form(True),
+    is_staff: bool = Form(False),
+    is_superuser: bool = Form(False),
     current_user=Depends(superuser_required)
 ):
     if await User.filter(email=email).exists():
@@ -62,7 +62,7 @@ async def get_user(user_id: int):
     }
 
 
-@router.put("/users/{user_id}", status_code=status.HTTP_200_OK)
+@router.put("/users/{user_id}", status_code=status.HTTP_200_OK, dependencies=[Depends(login_required)])
 async def update_user(
     user_id: int,
     username: str = None,
@@ -93,7 +93,7 @@ async def update_user(
     return {"detail": "User updated successfully"}
 
 
-@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(superuser_required)])
 async def delete_user(user_id: int):
     user = await User.get_or_none(id=user_id)
     if not user:
