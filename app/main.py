@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, Form
 from typing import Optional
+from contextlib import asynccontextmanager
 from tortoise.contrib.fastapi import register_tortoise
 from .routes import create_sub_app
 
@@ -7,11 +8,12 @@ import importlib
 app = FastAPI()
 apps = ["user", "item", "auth"]
 
-
 register_tortoise(
     app,
     db_url="mysql://root:root@localhost:3306/mydb",
-    modules={"models": ["applications.user.models"]},
+    modules={"models": [
+        "applications.user.models"
+    ]},
     generate_schemas=True,
     add_exception_handlers=True,
 )

@@ -47,10 +47,10 @@ def create_refresh_token(data: dict):
 async def get_current_user(
     request: Request,
     token: str = Depends(oauth2_scheme),
-    refresh_token: str = Form(None)  # you can also use Cookie(None)
+    # refresh_token: str = Form(None) 
+    refresh_token: str = Depends(oauth2_scheme)
 ) -> User:
     try:
-        # Try normal access token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
     except ExpiredSignatureError:
@@ -61,7 +61,6 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        # Try refreshing with refresh token
         try:
             refresh_payload = jwt.decode(refresh_token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
 
@@ -76,13 +75,13 @@ async def get_current_user(
             new_access_token = create_access_token(token_data)
             new_refresh_token = create_refresh_token(token_data)
 
-            # Attach new tokens to request.state so middleware can add them to response
+
             request.state.new_tokens = {
                 "access_token": new_access_token,
                 "refresh_token": new_refresh_token,
             }
 
-            # Decode new access token for payload
+
             payload = jwt.decode(new_access_token, SECRET_KEY, algorithms=[ALGORITHM])
 
         except ExpiredSignatureError:
@@ -103,7 +102,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Fetch user from DB
+
     try:
         user = await User.get(id=payload.get("sub"))
     except DoesNotExist:
@@ -115,34 +114,6 @@ async def get_current_user(
     return user
 
 
-# =========================
-# ROLE DEPENDENCIES
-# =========================
-async def superuser_required(current_user: User = Depends(get_current_user)):
-    if not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Superuser access required")
-    return current_user
-
-
-async def staff_required(current_user: User = Depends(get_current_user)):
-    if not (current_user.is_staff or current_user.is_superuser):
-        raise HTTPException(status_code=403, detail="Staff access required")
-    return current_user
-
-
-async def login_required(current_user: User = Depends(get_current_user)):
-    return current_user
-
-
-def permission_required(codename: str):
-    async def wrapper(current_user: User = Depends(get_current_user)):
-        if not await current_user.has_permission(codename):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permission '{codename}' required",
-            )
-        return current_user
-    return wrapper
 
 
 # # =========================

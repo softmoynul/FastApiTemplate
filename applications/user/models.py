@@ -3,12 +3,11 @@ from tortoise.models import Model
 
 class Permission(Model):
     id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=100, unique=True)   # e.g. "Can edit items"
-    codename = fields.CharField(max_length=100, unique=True)  # e.g. "edit_item"
-    model = fields.CharField(max_length=100)  # e.g. "Item"
+    name = fields.CharField(max_length=100, unique=True)
+    codename = fields.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return f"{self.model} | {self.codename}"
+        return f"{self.codename}"
 
 
 class Group(Model):
@@ -61,3 +60,4 @@ class User(Model):
 
     def __str__(self):
         return f"{self.username} ({self.email})"
+    
