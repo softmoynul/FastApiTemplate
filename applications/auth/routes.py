@@ -10,20 +10,6 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-@router.post("/signup")
-async def signup(
-    username: str = Body(...),
-    email: str = Body(...),
-    password: str = Body(...)
-):
-    existing_user = await User.get_or_none(username=username)
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username already taken")
-
-    hashed_password = pwd_context.hash(password)
-    user = await User.create(username=username, email=email, password=hashed_password)
-
-    return {"message": "User created successfully", "id": user.id}
 
 
 @router.post("/login")
@@ -51,6 +37,40 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         "refresh_token": refresh_token,
         "token_type": "bearer",
     }
+
+
+@router.post("/signup")
+async def signup(
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...)
+):
+    existing_user = await User.get_or_none(username=username)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    hashed_password = pwd_context.hash(password)
+    user = await User.create(username=username, email=email, password=hashed_password)
+
+    token_data = {
+        "sub": str(user.id),
+        "username": user.username,
+        "is_active": user.is_active,
+        "is_staff": user.is_staff,
+        "is_superuser": user.is_superuser,
+    }
+
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
+
+    return {
+        "message": "User created successfully",
+        "id": user.id,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+    }
+
 
 
 @router.post("/forgot-password")

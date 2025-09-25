@@ -65,9 +65,25 @@ async def get_all_users():
     ]
 )
 async def get_user(user_id: int):
-    user = await User.get_or_none(id=user_id)
+    user = await User.get_or_none(id=user_id).prefetch_related("groups", "user_permissions")
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # collect group names
+    groups = [group.name for group in user.groups]
+
+    # collect user permissions
+    user_perms = [perm.codename for perm in user.user_permissions]
+
+    # collect group permissions as well (if you want full perms including groups)
+    group_perms = []
+    for group in user.groups:
+        perms = await group.permissions.all()
+        group_perms.extend([perm.codename for perm in perms])
+
+    # merge unique permissions
+    all_perms = list(set(user_perms + group_perms))
+
     return {
         "id": user.id,
         "username": user.username,
@@ -76,7 +92,9 @@ async def get_user(user_id: int):
         "is_staff": user.is_staff,
         "is_superuser": user.is_superuser,
         "created_at": user.created_at,
-        "updated_at": user.updated_at
+        "updated_at": user.updated_at,
+        "groups": groups,
+        "permissions": all_perms,
     }
 
 

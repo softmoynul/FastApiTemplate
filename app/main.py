@@ -3,9 +3,16 @@ from typing import Optional
 from contextlib import asynccontextmanager
 from tortoise.contrib.fastapi import register_tortoise
 from .routes import create_sub_app
-
 import importlib
-app = FastAPI()
+from .utils import sync_permissions
+from .config import settings
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await sync_permissions()
+    yield
+
+app = FastAPI(lifespan=lifespan, debug=settings.DEBUG)
 apps = ["user", "item", "auth"]
 
 register_tortoise(
